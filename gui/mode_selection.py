@@ -1,0 +1,108 @@
+"""Mode selection screen - initial application screen."""
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QLineEdit, QPushButton, QTextEdit, QButtonGroup, QRadioButton)
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QFont
+
+
+class ModeSelectionScreen(QWidget):
+    """Initial screen for selecting mode and entering job information."""
+    
+    mode_selected = pyqtSignal(int, str, str)  # mode, serial_number, description
+    
+    def __init__(self):
+        super().__init__()
+        self.init_ui()
+    
+    def init_ui(self):
+        """Initialize the user interface."""
+        layout = QVBoxLayout()
+        layout.setSpacing(20)
+        
+        # Title
+        title = QLabel("Camera QC Application")
+        title.setFont(QFont("Arial", 24, QFont.Weight.Bold))
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+        
+        # Serial number input
+        serial_layout = QHBoxLayout()
+        serial_label = QLabel("Serial Number:")
+        serial_label.setMinimumWidth(150)
+        self.serial_input = QLineEdit()
+        self.serial_input.setPlaceholderText("Enter unit serial number (optional)")
+        serial_layout.addWidget(serial_label)
+        serial_layout.addWidget(self.serial_input)
+        layout.addLayout(serial_layout)
+        
+        # Description input
+        desc_layout = QVBoxLayout()
+        desc_label = QLabel("Description:")
+        self.description_input = QTextEdit()
+        self.description_input.setPlaceholderText("Enter purpose of work")
+        self.description_input.setMaximumHeight(80)
+        desc_layout.addWidget(desc_label)
+        desc_layout.addWidget(self.description_input)
+        layout.addLayout(desc_layout)
+        
+        # Mode selection
+        mode_label = QLabel("Select Mode:")
+        mode_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        layout.addWidget(mode_label)
+        
+        self.mode_group = QButtonGroup()
+        
+        # Mode 1
+        mode1_radio = QRadioButton("Mode 1: General Image Capture")
+        mode1_radio.setFont(QFont("Arial", 12))
+        self.mode_group.addButton(mode1_radio, 1)
+        layout.addWidget(mode1_radio)
+        
+        mode1_desc = QLabel("    Capture images and videos from any camera source")
+        mode1_desc.setStyleSheet("color: gray;")
+        layout.addWidget(mode1_desc)
+        
+        # Mode 2
+        mode2_radio = QRadioButton("Mode 2: QC Process")
+        mode2_radio.setFont(QFont("Arial", 12))
+        self.mode_group.addButton(mode2_radio, 2)
+        layout.addWidget(mode2_radio)
+        
+        mode2_desc = QLabel("    Guided quality control workflow with checklist and report generation")
+        mode2_desc.setStyleSheet("color: gray;")
+        layout.addWidget(mode2_desc)
+        
+        # Mode 3
+        mode3_radio = QRadioButton("Mode 3: Maintenance/Repair")
+        mode3_radio.setFont(QFont("Arial", 12))
+        self.mode_group.addButton(mode3_radio, 3)
+        layout.addWidget(mode3_radio)
+        
+        mode3_desc = QLabel("    Guided maintenance and repair procedures with documentation")
+        mode3_desc.setStyleSheet("color: gray;")
+        layout.addWidget(mode3_desc)
+        
+        layout.addStretch()
+        
+        # Start button
+        self.start_button = QPushButton("Start")
+        self.start_button.setFont(QFont("Arial", 14))
+        self.start_button.setMinimumHeight(50)
+        self.start_button.clicked.connect(self.on_start_clicked)
+        layout.addWidget(self.start_button)
+        
+        self.setLayout(layout)
+    
+    def on_start_clicked(self):
+        """Handle start button click."""
+        serial = self.serial_input.text().strip()
+        description = self.description_input.toPlainText().strip()
+        selected_mode = self.mode_group.checkedId()
+        
+        # Serial number is now optional
+        self.serial_input.setStyleSheet("")
+        
+        if selected_mode == -1:
+            return
+        
+        self.mode_selected.emit(selected_mode, serial, description)
