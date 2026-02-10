@@ -121,51 +121,60 @@ class Mode1CaptureScreen(QWidget):
     
     def discover_cameras(self):
         """Discover available cameras."""
-        cameras = CameraManager.discover_cameras()
-        
-        self.camera_combo.clear()
-        self.available_cameras = cameras
-        
-        for cam in cameras:
-            self.camera_combo.addItem(cam.name)
-        
-        if not cameras:
-            self.status_label.setText("No cameras found")
+        try:
+            cameras = CameraManager.discover_cameras()
+            
+            self.camera_combo.clear()
+            self.available_cameras = cameras
+            
+            for cam in cameras:
+                self.camera_combo.addItem(cam.name)
+            
+            if not cameras:
+                self.status_label.setText("No cameras found")
+        except Exception as e:
+            self.status_label.setText(f"Camera discovery error: {str(e)}")
+            self.available_cameras = []
     
     def on_camera_changed(self, index):
         """Handle camera selection change."""
-        # Stop existing QR scanner
-        if self.qr_scanner:
-            self.qr_scanner.stop()
-            self.qr_scanner = None
-        
-        if self.current_camera:
-            self.timer.stop()
-            self.current_camera.close()
-            self.current_camera = None
-        
-        if index >= 0 and index < len(self.available_cameras):
-            self.current_camera = self.available_cameras[index]
-            if self.current_camera.open():
-                self.timer.start(30)  # 30ms refresh
-                self.capture_button.setEnabled(True)
-                self.record_button.setEnabled(True)
-                self.status_label.setText(f"Connected to {self.current_camera.name}")
-                
-                # Start QR scanner if available
-                if QR_SCANNER_AVAILABLE:
-                    self.qr_scanner = QRScannerThread(self.current_camera)
-                    self.qr_scanner.qr_detected.connect(self.on_qr_detected)
-                    self.qr_scanner.start()
-                    self.qr_status_label.setText("Active")
-                    self.qr_status_label.setStyleSheet("color: green;")
+        try:
+            # Stop existing QR scanner
+            if self.qr_scanner:
+                self.qr_scanner.stop()
+                self.qr_scanner = None
+            
+            if self.current_camera:
+                self.timer.stop()
+                self.current_camera.close()
+                self.current_camera = None
+            
+            if index >= 0 and index < len(self.available_cameras):
+                self.current_camera = self.available_cameras[index]
+                if self.current_camera.open():
+                    self.timer.start(30)  # 30ms refresh
+                    self.capture_button.setEnabled(True)
+                    self.record_button.setEnabled(True)
+                    self.status_label.setText(f"Connected to {self.current_camera.name}")
+                    
+                    # Start QR scanner if available
+                    if QR_SCANNER_AVAILABLE:
+                        self.qr_scanner = QRScannerThread(self.current_camera)
+                        self.qr_scanner.qr_detected.connect(self.on_qr_detected)
+                        self.qr_scanner.start()
+                        self.qr_status_label.setText("Active")
+                        self.qr_status_label.setStyleSheet("color: green;")
+                    else:
+                        self.qr_status_label.setText("Unavailable")
+                        self.qr_status_label.setStyleSheet("color: gray;")
                 else:
-                    self.qr_status_label.setText("Unavailable")
-                    self.qr_status_label.setStyleSheet("color: gray;")
-            else:
-                self.status_label.setText("Failed to open camera")
-                self.capture_button.setEnabled(False)
-                self.record_button.setEnabled(False)
+                    self.status_label.setText("Failed to open camera")
+                    self.capture_button.setEnabled(False)
+                    self.record_button.setEnabled(False)
+        except Exception as e:
+            self.status_label.setText(f"Camera error: {str(e)}")
+            self.capture_button.setEnabled(False)
+            self.record_button.setEnabled(False)
     
     def on_qr_detected(self, qr_data: str):
         """Handle QR code detection."""
