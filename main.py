@@ -34,6 +34,7 @@ class MainWindow(QMainWindow):
         # Create appropriate mode widget
         if mode == 1:
             self.current_mode_widget = Mode1CaptureScreen(serial_number, description)
+            self.current_mode_widget.back_requested.connect(self.return_to_mode_selection)
         elif mode == 2:
             # TODO: Implement Mode 2
             print(f"Mode 2 not yet implemented. Serial: {serial_number}, Desc: {description}")
@@ -46,13 +47,17 @@ class MainWindow(QMainWindow):
         if self.current_mode_widget:
             self.stack.addWidget(self.current_mode_widget)
             self.stack.setCurrentWidget(self.current_mode_widget)
-            
-            # Connect back signal to return to mode selection
-            self.current_mode_widget.destroyed.connect(self.return_to_mode_selection)
     
     def return_to_mode_selection(self):
         """Return to mode selection screen."""
+        # Switch to mode selection screen
         self.stack.setCurrentWidget(self.mode_selection)
+        
+        # Clean up the mode widget
+        if self.current_mode_widget:
+            self.stack.removeWidget(self.current_mode_widget)
+            self.current_mode_widget.deleteLater()
+            self.current_mode_widget = None
 
 
 def main():

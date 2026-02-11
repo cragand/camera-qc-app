@@ -1,7 +1,7 @@
 """Mode 1: General image capture interface."""
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QComboBox, QFileDialog, QMessageBox)
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap, QFont
 import cv2
 import os
@@ -20,6 +20,8 @@ except ImportError:
 
 class Mode1CaptureScreen(QWidget):
     """General purpose image and video capture interface."""
+    
+    back_requested = pyqtSignal()  # Signal to request return to menu
     
     def __init__(self, serial_number: str, description: str):
         super().__init__()
@@ -116,7 +118,7 @@ class Mode1CaptureScreen(QWidget):
         
         self.back_button = QPushButton("Back to Menu")
         self.back_button.setMinimumHeight(40)
-        self.back_button.clicked.connect(self.close)
+        self.back_button.clicked.connect(self.on_back_clicked)
         button_layout.addWidget(self.back_button)
         
         layout.addLayout(button_layout)
@@ -301,35 +303,33 @@ class Mode1CaptureScreen(QWidget):
             self.capture_button.setEnabled(True)
             self.status_label.setText("Recording stopped")
     
+    def on_back_clicked(self):
+        """Handle back button click."""
+        self.cleanup_resources()
+        self.back_requested.emit()
+    
+    def cleanup_resources(self):
+        """Clean up resources before closing."""
+        # Stop timer immediately
+        if self.timer.isActive():
+            self.timer.stop()
+        
+        # Stop recording if active
+        if self.is_recording and self.video_writer:
+            self.video_writer.release()
+            self.video_writer = None
+        
+        # Stop QR scanner without waiting
+        if self.qr_scanner:
+            self.qr_scanner.stop()
+            self.qr_scanner = None
+        
+        # Close camera
+        if self.current_camera:
+            self.current_camera.close()
+            self.current_camera = None
+    
     def closeEvent(self, event):
         """Clean up when closing."""
-        print("Closing Mode 1 window...")
-        try:
-            # Stop timer first
-            self.timer.stop()
-            print("Timer stopped")
-            
-            # Stop recording if active
-            if self.is_recording and self.video_writer:
-                self.video_writer.release()
-                self.video_writer = None
-                print("Recording stopped")
-            
-            # Stop QR scanner aggressively
-            if self.qr_scanner:
-                print("Stopping QR scanner...")
-                self.qr_scanner.stop()
-                self.qr_scanner = None
-                print("QR scanner stopped")
-            
-            # Close camera last
-            if self.current_camera:
-                self.current_camera.close()
-                self.current_camera = None
-                print("Camera closed")
-                
-        except Exception as e:
-            print(f"Cleanup error: {e}")
-        
-        print("Cleanup complete, accepting close event")
+        self.cleanup_resources()
         event.accept()
