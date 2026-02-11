@@ -256,6 +256,10 @@ class Mode1CaptureScreen(QWidget):
                                    "No images have been captured yet. Capture some images first.")
             return
         
+        # Show generating status
+        self.status_label.setText("Generating PDF report...")
+        self.report_button.setEnabled(False)
+        
         try:
             report_path = create_simple_report(
                 self.serial_number,
@@ -263,17 +267,39 @@ class Mode1CaptureScreen(QWidget):
                 self.captured_images
             )
             
-            QMessageBox.information(self, "Report Generated", 
-                                   f"PDF report generated successfully!\n\n"
-                                   f"Location: {report_path}\n"
-                                   f"Images included: {len(self.captured_images)}")
+            # Update status
+            self.status_label.setText(f"✓ Report saved: {os.path.basename(report_path)}")
+            self.status_label.setStyleSheet("color: green; font-weight: bold;")
             
-            self.status_label.setText(f"Report generated: {os.path.basename(report_path)}")
+            # Show success dialog
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Information)
+            msg.setWindowTitle("Report Generated")
+            msg.setText("PDF report generated successfully!")
+            msg.setInformativeText(f"Location: {report_path}\n\nImages included: {len(self.captured_images)}")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
+            
+            # Reset status style after a moment
+            self.status_label.setStyleSheet("")
             
         except Exception as e:
-            QMessageBox.critical(self, "Report Error", 
-                               f"Failed to generate report:\n{str(e)}")
-            self.status_label.setText(f"Report generation failed: {str(e)}")
+            self.status_label.setText(f"✗ Report failed: {str(e)}")
+            self.status_label.setStyleSheet("color: red; font-weight: bold;")
+            
+            # Show error dialog
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Report Error")
+            msg.setText("Failed to generate report")
+            msg.setInformativeText(str(e))
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
+            
+            self.status_label.setStyleSheet("")
+        
+        finally:
+            self.report_button.setEnabled(True)
     
     def toggle_recording(self):
         """Start or stop video recording."""
