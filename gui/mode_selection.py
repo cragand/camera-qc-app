@@ -20,7 +20,7 @@ class ModeSelectionScreen(QWidget):
         layout.setSpacing(20)
         
         # Title
-        title = QLabel("Camera QC Application")
+        title = QLabel("Emtech EoAT Cam Viewer")
         title.setFont(QFont("Arial", 24, QFont.Weight.Bold))
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
