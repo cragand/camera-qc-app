@@ -127,6 +127,55 @@ def test_no_images_report():
         return False
 
 
+def test_metadata_report():
+    """Test report with camera source and notes metadata."""
+    print("\n" + "="*50)
+    print("Testing Report with Camera & Notes Metadata")
+    print("="*50)
+    
+    # Create test images
+    test_dir = "output/test_images"
+    image_paths = create_test_images(test_dir, count=3)
+    
+    # Create image data with metadata
+    images_with_metadata = [
+        {
+            'path': image_paths[0],
+            'camera': 'USB Camera 0',
+            'notes': 'Initial inspection - front view',
+            'timestamp': '20260212_120000'
+        },
+        {
+            'path': image_paths[1],
+            'camera': 'USB Camera 1',
+            'notes': 'Side view showing defect area',
+            'timestamp': '20260212_120030'
+        },
+        {
+            'path': image_paths[2],
+            'camera': 'USB Camera 0',
+            'notes': '',  # No notes for this image
+            'timestamp': '20260212_120100'
+        }
+    ]
+    
+    try:
+        report_path = create_simple_report(
+            serial_number="TEST-META",
+            description="Test report with camera source and notes",
+            images=images_with_metadata
+        )
+        print(f"\n✓ Metadata report generated successfully!")
+        print(f"  Location: {report_path}")
+        print(f"  Images with metadata: {len(images_with_metadata)}")
+        return True
+    except Exception as e:
+        print(f"\n✗ Metadata report generation failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def main():
     """Run all tests."""
     print("="*50)
@@ -143,6 +192,9 @@ def main():
     
     # Test 3: Report with no images
     results.append(("Empty Report", test_no_images_report()))
+    
+    # Test 4: Report with metadata
+    results.append(("Metadata Report", test_metadata_report()))
     
     # Summary
     print("\n" + "="*50)

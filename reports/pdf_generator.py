@@ -139,11 +139,26 @@ class PDFReportGenerator:
             story.append(Paragraph(f"Captured Images ({len(images)})", self.styles['SectionHeader']))
             story.append(Spacer(1, 0.2*inch))
             
-            for idx, img_path in enumerate(images, 1):
+            for idx, img_data in enumerate(images, 1):
+                # Handle both old format (string path) and new format (dict with metadata)
+                if isinstance(img_data, dict):
+                    img_path = img_data['path']
+                    camera = img_data.get('camera', 'Unknown')
+                    notes = img_data.get('notes', '')
+                else:
+                    # Legacy format - just a path string
+                    img_path = img_data
+                    camera = 'Unknown'
+                    notes = ''
+                
                 if os.path.exists(img_path):
-                    # Add image caption
-                    caption = Paragraph(f"Image {idx}: {os.path.basename(img_path)}", 
-                                      self.styles['Normal'])
+                    # Add image caption with camera source
+                    caption_text = f"<b>Image {idx}</b>: {os.path.basename(img_path)}<br/>"
+                    caption_text += f"<i>Camera: {camera}</i>"
+                    if notes:
+                        caption_text += f"<br/><b>Notes:</b> {notes}"
+                    
+                    caption = Paragraph(caption_text, self.styles['Normal'])
                     story.append(caption)
                     story.append(Spacer(1, 0.1*inch))
                     
@@ -169,7 +184,7 @@ def create_simple_report(serial_number, description, images, output_dir="output/
     Args:
         serial_number: Serial number or identifier
         description: Job description
-        images: List of image file paths
+        images: List of image file paths OR list of dicts with {path, camera, notes}
         output_dir: Output directory for report
         
     Returns:

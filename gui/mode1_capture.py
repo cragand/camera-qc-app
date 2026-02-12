@@ -33,7 +33,7 @@ class Mode1CaptureScreen(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_frame)
         self.qr_scanner = None
-        self.captured_images = []  # Track captured images for report generation
+        self.captured_images = []  # List of dicts: {path, camera, notes}
         
         # Use "unknown" if no serial number provided
         output_serial = serial_number if serial_number else "unknown"
@@ -110,6 +110,27 @@ class Mode1CaptureScreen(QWidget):
         self.preview_label.setStyleSheet("border: 2px solid black; background-color: #2b2b2b;")
         self.preview_label.setText("No camera selected")
         layout.addWidget(self.preview_label)
+        
+        # Image notes input (optional)
+        notes_layout = QHBoxLayout()
+        notes_label = QLabel("Image Notes (optional):")
+        notes_label.setStyleSheet("color: black; font-weight: bold;")
+        self.notes_input = QLineEdit()
+        self.notes_input.setPlaceholderText("Add notes for the next captured image...")
+        self.notes_input.setStyleSheet("""
+            QLineEdit {
+                padding: 8px;
+                border: 2px solid #77C25E;
+                border-radius: 3px;
+                background-color: white;
+            }
+            QLineEdit:focus {
+                border: 2px solid #5FA84A;
+            }
+        """)
+        notes_layout.addWidget(notes_label)
+        notes_layout.addWidget(self.notes_input)
+        layout.addLayout(notes_layout)
         
         # Control buttons
         button_layout = QHBoxLayout()
@@ -307,7 +328,22 @@ class Mode1CaptureScreen(QWidget):
             filepath = os.path.join(self.output_dir, filename)
             
             cv2.imwrite(filepath, frame)
-            self.captured_images.append(filepath)  # Track for report generation
+            
+            # Get notes and camera info
+            notes = self.notes_input.text().strip()
+            camera_name = self.current_camera.name if self.current_camera else "Unknown"
+            
+            # Store image with metadata
+            self.captured_images.append({
+                'path': filepath,
+                'camera': camera_name,
+                'notes': notes,
+                'timestamp': timestamp
+            })
+            
+            # Clear notes field for next image
+            self.notes_input.clear()
+            
             self.status_label.setText(f"Image saved: {filename} (Total: {len(self.captured_images)})")
     
     def generate_report(self):
