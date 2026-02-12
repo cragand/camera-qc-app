@@ -194,7 +194,7 @@ class PDFReportGenerator:
                         if idx % 2 == 0 and idx < len(images):
                             story.append(PageBreak())
         else:
-            story.append(Paragraph("No images captured", self.styles['Normal'])))
+            story.append(Paragraph("No images captured", self.styles['Normal']))
         
         # Build PDF
         doc.build(story)
