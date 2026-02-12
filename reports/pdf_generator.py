@@ -98,7 +98,7 @@ class PDFReportGenerator:
         if workflow_name:
             info_data.append(["Workflow:", workflow_name])
         
-        info_table = Table(info_data, colWidths=[2*inch, 4*inch])
+        info_table = Table(info_data, colWidths=[2*inch, 4*inch], splitByRow=True)
         info_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Align to top for wrapped text
