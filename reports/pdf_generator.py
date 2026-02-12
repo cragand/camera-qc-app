@@ -85,9 +85,12 @@ class PDFReportGenerator:
         # Session Information
         story.append(Paragraph("Session Information", self.styles['SectionHeader']))
         
+        # Use Paragraph for description to enable text wrapping
+        desc_paragraph = Paragraph(description if description else "N/A", self.styles['Normal'])
+        
         info_data = [
             ["Serial Number:", serial_number if serial_number else "N/A"],
-            ["Description:", description if description else "N/A"],
+            ["Description:", desc_paragraph],
             ["Mode:", mode_name],
             ["Date/Time:", datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
         ]
@@ -98,6 +101,7 @@ class PDFReportGenerator:
         info_table = Table(info_data, colWidths=[2*inch, 4*inch])
         info_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Align to top for wrapped text
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
             ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
             ('ALIGN', (1, 0), (1, -1), 'LEFT'),
